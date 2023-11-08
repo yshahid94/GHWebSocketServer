@@ -1,42 +1,118 @@
+import { STCMessageTypeEnum } from "./MessageModels/STCMessageTypeEnum";
+import { STCRequestMessageModel } from "./MessageModels/STCRequestMessageModel";
+import { entityModel } from "./entityModel";
+import { entityTypeEnum } from "./entityTypeEnum";
 import { initiativeStateEnum } from "./initiativeStateEnum";
-import { userModel } from "./userModel";
+import { monsterEntityModel } from "./monsterEntityModel";
+import { userModel } from "./userEntityModel";
 
 export class groupModel {
     //Fields 
-    users: userModel[] = [];
-    allReady = false;
+    private entities: entityModel[] = [];
+    showInitiative = false;
  
     constructor (){
     }
-    addUser(user: userModel)
+    
+    addEntity(entity: entityModel)
     {
-        this.users.push(user);
-        this.allReady = false;
+        //if user is first set to active and admin
+        if(entity instanceof userModel){
+            if(this.entities.length == 0){
+                entity.admin = true;
+            }
+            const msgModel = new STCRequestMessageModel(STCMessageTypeEnum.User_Data, entity.id);
+            entity.webSocket?.send(JSON.stringify(msgModel));
+        }
+        this.entities.push(entity);
     }
-    removeUser(user: userModel)
+    removeEntity(user: entityModel)
     {
-        const index = this.users.findIndex(x => x.userId = user.userId);
+        const index = this.entities.findIndex(x => x.id == user.id);
         if(index > -1)
         {
-            this.users.splice(index, 1);
+            this.entities.splice(index, 1);
         }
+        this.newRound();
     }
     newRound(){
-        for (let index = 0; index < this.users.length; index++) {
-            this.users[index] = { ...this.users[index], initiative: null, initiativeState: initiativeStateEnum.Not_Set } as userModel;
-        }
-        this.allReady = false;
+        //this might not work
+        this.entities.forEach((entity) =>{
+            entity.resetEntity();
+        });
+        this.showInitiative = false;
+
+        // for (let index = 0; index < this.entities.length; index++) {
+        //     this.entities[index] = { ...this.entities[index], initiative: { init1: null, init2: null }, active: false } as userModel;
+        // }
     }
-    setInitiative(user: userModel, initiative: number | null){
-        const index = this.users.findIndex(x => x.userId == user.userId);
-        this.users[index] = { ...this.users[index], initiative: initiative, initiativeState: initiative == null ? initiativeStateEnum.Not_Set : initiativeStateEnum.Set } as userModel;
-        this.allReady = this.users.every(x => x.initiativeState == initiativeStateEnum.Set);
-        if(this.allReady)
-        {
-            this.orderGroup();
+    setInitiative(entity: entityModel, initiative: { init1: number | null, init2: number | null } | number | null){
+        const index = this.entities.findIndex(x => x.id == entity.id);
+        if(entity.entityType == entityTypeEnum.User){
+            // const currentEntity = this.entities[index] as userModel;
+            (this.entities[index] as userModel).initiative = (initiative as { init1: number | null, init2: number | null });
+            // this.entities[index] = { 
+            //     ...currentEntity, 
+            //     initiative: initiative, 
+            //     disconnectUser: currentEntity.disconnectUser, // Copy over the disconnectUser function
+            //     resetEntity: currentEntity.resetEntity,
+            //     initiativeCombined: currentEntity.initiativeCombined,
+            //     isInitiativeSet: currentEntity.isInitiativeSet,
+            //     constructor: currentEntity.constructor
+            // } as userModel;
+        }
+        else if(entity.entityType == entityTypeEnum.Monster){
+            // const currentEntity = this.entities[index] as monsterEntityModel;
+
+            // this.entities[index] = { 
+            //     ...currentEntity, 
+            //     initiative: initiative, 
+            //     resetEntity: currentEntity.resetEntity,
+            //     initiativeCombined: currentEntity.initiativeCombined,
+            //     isInitiativeSet: currentEntity.isInitiativeSet,
+            //     constructor: currentEntity.constructor
+            // } as monsterEntityModel;
+            
+            (this.entities[index] as monsterEntityModel).initiative = (initiative as number | null);
+        }
+        
+        if(this.allInitiativesSet()){
+            this.sortAndActivateFirst();
         }
     }
-    orderGroup(){
-        this.users.sort(function(a, b){return (a.initiative ?? 99) - (b.initiative ?? 99)});
+    nextTurn(){
+        //move active to next user in the queue
+        let activeEntityFound = false;
+        for (let index = 0; index < this.entities.length; index++) {
+            const indexEntity = this.entities[index];
+            if(activeEntityFound){
+                this.entities[index].activateEntity();
+                // this.entities[index] = { ...indexEntity, currentlyActive: true, disconnectUser: indexEntity.disconnectUser } as userModel;
+                return;
+            }
+            activeEntityFound = indexEntity.currentlyActive;
+            if(indexEntity.currentlyActive){
+                this.entities[index].deactivateEntity();
+                // this.entities[index] = { ...indexEntity, currentlyActive: false, disconnectUser: indexEntity.disconnectUser } as userModel;
+            }
+        }
+    }
+    resetGroup(sourceUser: userModel){
+        //disconnect all others before disconnecting yourself
+        this.entities.filter(x => x.id != sourceUser.id && x instanceof userModel).forEach((entity) => {
+            (entity as userModel).disconnectUser();
+        });
+        sourceUser.disconnectUser();
+    }
+    allInitiativesSet(){
+        return this.entities.every(x => x.isInitiativeSet());
+    }
+
+    sortAndActivateFirst(){
+        this.entities = this.entities.sort(function(a, b){
+            return a.initiativeCombined() - b.initiativeCombined();
+        });
+        // this.entities[0] = { ...this.entities[0], active: true } as any;
+        this.entities[0].currentlyActive = true;
     }
  }
