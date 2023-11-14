@@ -15,12 +15,6 @@ export class entityModel {
    resetEntity(){
       this.currentlyActive = false;
    }
-   deactivateEntity(){
-      this.currentlyActive = false;
-   }
-   activateEntity(){
-      this.currentlyActive = true;
-   }
    initiativeCombined(){
       return 9999;
    }

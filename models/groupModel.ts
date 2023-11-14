@@ -2,7 +2,6 @@ import { STCMessageTypeEnum } from "./MessageModels/STCMessageTypeEnum";
 import { STCRequestMessageModel } from "./MessageModels/STCRequestMessageModel";
 import { entityModel } from "./entityModel";
 import { entityTypeEnum } from "./entityTypeEnum";
-import { initiativeStateEnum } from "./initiativeStateEnum";
 import { monsterEntityModel } from "./monsterEntityModel";
 import { userModel } from "./userEntityModel";
 
@@ -25,6 +24,10 @@ export class groupModel {
             entity.webSocket?.send(JSON.stringify(msgModel));
         }
         this.entities.push(entity);
+        
+        if(this.allInitiativesSet()){
+            this.newRound();
+        }
     }
     removeEntity(user: entityModel)
     {
@@ -41,38 +44,13 @@ export class groupModel {
             entity.resetEntity();
         });
         this.showInitiative = false;
-
-        // for (let index = 0; index < this.entities.length; index++) {
-        //     this.entities[index] = { ...this.entities[index], initiative: { init1: null, init2: null }, active: false } as userModel;
-        // }
     }
     setInitiative(entity: entityModel, initiative: { init1: number | null, init2: number | null } | number | null){
         const index = this.entities.findIndex(x => x.id == entity.id);
         if(entity.entityType == entityTypeEnum.User){
-            // const currentEntity = this.entities[index] as userModel;
             (this.entities[index] as userModel).initiative = (initiative as { init1: number | null, init2: number | null });
-            // this.entities[index] = { 
-            //     ...currentEntity, 
-            //     initiative: initiative, 
-            //     disconnectUser: currentEntity.disconnectUser, // Copy over the disconnectUser function
-            //     resetEntity: currentEntity.resetEntity,
-            //     initiativeCombined: currentEntity.initiativeCombined,
-            //     isInitiativeSet: currentEntity.isInitiativeSet,
-            //     constructor: currentEntity.constructor
-            // } as userModel;
         }
-        else if(entity.entityType == entityTypeEnum.Monster){
-            // const currentEntity = this.entities[index] as monsterEntityModel;
-
-            // this.entities[index] = { 
-            //     ...currentEntity, 
-            //     initiative: initiative, 
-            //     resetEntity: currentEntity.resetEntity,
-            //     initiativeCombined: currentEntity.initiativeCombined,
-            //     isInitiativeSet: currentEntity.isInitiativeSet,
-            //     constructor: currentEntity.constructor
-            // } as monsterEntityModel;
-            
+        else if(entity.entityType == entityTypeEnum.Monster){            
             (this.entities[index] as monsterEntityModel).initiative = (initiative as number | null);
         }
         
@@ -86,14 +64,12 @@ export class groupModel {
         for (let index = 0; index < this.entities.length; index++) {
             const indexEntity = this.entities[index];
             if(activeEntityFound){
-                this.entities[index].activateEntity();
-                // this.entities[index] = { ...indexEntity, currentlyActive: true, disconnectUser: indexEntity.disconnectUser } as userModel;
+                this.entities[index].currentlyActive = true;
                 return;
             }
             activeEntityFound = indexEntity.currentlyActive;
             if(indexEntity.currentlyActive){
-                this.entities[index].deactivateEntity();
-                // this.entities[index] = { ...indexEntity, currentlyActive: false, disconnectUser: indexEntity.disconnectUser } as userModel;
+                this.entities[index].currentlyActive = false;
             }
         }
     }
@@ -112,7 +88,6 @@ export class groupModel {
         this.entities = this.entities.sort(function(a, b){
             return a.initiativeCombined() - b.initiativeCombined();
         });
-        // this.entities[0] = { ...this.entities[0], active: true } as any;
         this.entities[0].currentlyActive = true;
     }
  }
