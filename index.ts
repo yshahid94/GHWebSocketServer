@@ -88,12 +88,12 @@ const server = Bun.serve<{ user: userModel }>({
             actionSTCMessage(STCMessageTypeEnum.Group_Data);
         },
         close(ws) {
-            ws.unsubscribe(topic);
-            group.removeEntity(ws.data.user);
-            console.log(`${ws.data.user.name} removed`, ws.data.user);
+            // ws.unsubscribe(topic);
+            // group.removeEntity(ws.data.user);
+            // console.log(`${ws.data.user.name} removed`, ws.data.user);
 
-            actionSTCMessage(STCMessageTypeEnum.Clear_Initiative);
-            actionSTCMessage(STCMessageTypeEnum.Group_Data);
+            // actionSTCMessage(STCMessageTypeEnum.Clear_Initiative);
+            // actionSTCMessage(STCMessageTypeEnum.Group_Data);
         },
     },
 });
