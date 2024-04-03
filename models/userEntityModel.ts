@@ -8,10 +8,12 @@ export class userModel extends entityModel {
    // initiativeState = initiativeStateEnum.Not_Set;
    webSocket: ServerWebSocket<{ user: userModel }> | null = null;
    admin: boolean = false;
+   deviceId: string;
 
-   constructor(name: string, active = false, admin = false) {
-      super(name, entityTypeEnum.User);
+   constructor(name: string, id: string, active = false, admin = false) {
+      super(name, entityTypeEnum.User, id);
       this.admin = admin;
+      this.deviceId = id;
    }
 
    disconnectUser() {

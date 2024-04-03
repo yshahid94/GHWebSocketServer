@@ -9,14 +9,19 @@ const topic = "group";
 let group = new groupModel();
 
 const server = Bun.serve<{ user: userModel }>({
+    port: 1515,
     fetch(req, server) {
         //Get name from query param
         const requestURL = new URL(req.url);
         const username = requestURL.searchParams.get("Name");
+        const deviceId = requestURL.searchParams.get("DeviceId"); // Newly added
+        if (!username || !deviceId) { // Modified line
+            return new Response("username or DeviceId missing", { status: 400 }); // Modified line
+        }
         if (!username) {
             return new Response("username missing", { status: 400 });
         }
-        const user = new userModel(username);
+        const user = new userModel(username, deviceId);
 
         const success = server.upgrade(req, 
             { 
@@ -31,16 +36,31 @@ const server = Bun.serve<{ user: userModel }>({
     },
     websocket: {
         open(ws) {
-            ws.data.user.webSocket = ws;
-            group.addEntity(ws.data.user);
-            // var monster = new monsterEntityModel("cool guy");
-            // group.addEntity(monster);
-            console.log(`${ws.data.user.name} added`, ws.data.user);
+            const reconnectingUser = group.findUserByDeviceId(ws.data.user.deviceId);
+            if (reconnectingUser) {
+                if(reconnectingUser instanceof userModel){
+                    reconnectingUser.webSocket = ws;
+                    console.log(`Reconnected: ${reconnectingUser.name}`, reconnectingUser);
+                }
+            } else {
+                ws.data.user.webSocket = ws;
+                group.addEntity(ws.data.user);
+                // var monster = new monsterEntityModel("cool guy");
+                // group.addEntity(monster);
+                console.log(`${ws.data.user.name} added`, ws.data.user);
+            }
+
             ws.subscribe(topic);
             actionSTCMessage(STCMessageTypeEnum.Group_Data);
         },
         message(ws, message) {
             // the server re-broadcasts incoming messages to everyone
+            try {
+                const test: CTSRequestMessageModel = JSON.parse(message as string);
+            } catch (error) {
+                console.log(`Invalid payload`);
+                return;
+            }
             const CTSRequestMessage: CTSRequestMessageModel = JSON.parse(message as string);
             console.log(`${CTSRequestMessage.messageType.toString()} message`);
             

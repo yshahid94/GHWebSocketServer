@@ -90,4 +90,8 @@ export class groupModel {
         });
         this.entities[0].currentlyActive = true;
     }
+
+    findUserByDeviceId(deviceId: string) {
+        return this.entities.find(user => user.id === deviceId);
+    }
  }

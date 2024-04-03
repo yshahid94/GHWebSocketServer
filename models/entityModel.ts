@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { entityTypeEnum } from "./entityTypeEnum";
 
 export class entityModel {
@@ -7,9 +6,9 @@ export class entityModel {
    currentlyActive: boolean = false;
    entityType: entityTypeEnum;
 
-   constructor (name: string, entityType: entityTypeEnum){
+   constructor (name: string, entityType: entityTypeEnum, id: string){
       this.name = name;
-      this.id  = randomUUID();
+      this.id = id;
       this.entityType = entityType;
    }
    resetEntity(){
