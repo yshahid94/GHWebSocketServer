@@ -79,6 +79,7 @@ export class groupModel {
             (entity as userModel).disconnectUser();
         });
         sourceUser.disconnectUser();
+        this.entities = [];
     }
     allInitiativesSet(){
         return this.entities.every(x => x.isInitiativeSet());
