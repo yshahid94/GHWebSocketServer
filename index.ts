@@ -40,14 +40,14 @@ const server = Bun.serve<{ user: userModel }>({
             if (reconnectingUser) {
                 if(reconnectingUser instanceof userModel){
                     reconnectingUser.webSocket = ws;
-                    console.log(`Reconnected: ${reconnectingUser.name}`, reconnectingUser);
+                    console.log(`Reconnected: ${reconnectingUser.name}`);
                 }
             } else {
                 ws.data.user.webSocket = ws;
                 group.addEntity(ws.data.user);
                 // var monster = new monsterEntityModel("cool guy");
                 // group.addEntity(monster);
-                console.log(`${ws.data.user.name} added`, ws.data.user);
+                console.log(`${ws.data.user.name} added`);
             }
 
             ws.subscribe(topic);
@@ -103,7 +103,7 @@ function actionSTCMessage(type : STCMessageTypeEnum){
     let data: any = null;
     switch (type) {
         case STCMessageTypeEnum.Group_Data:
-            console.log(group);
+            console.log(`Sending out group data`);
             data = group;
             break;
         default:

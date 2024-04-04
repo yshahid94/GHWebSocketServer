@@ -80,6 +80,7 @@ export class groupModel {
         });
         sourceUser.disconnectUser();
         this.entities = [];
+        console.log(`Cleared entities list`);
     }
     allInitiativesSet(){
         return this.entities.every(x => x.isInitiativeSet());
