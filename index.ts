@@ -113,8 +113,7 @@ function actionSTCMessage(type : STCMessageTypeEnum){
 }
 
 function publishSTCMessage (type : STCMessageTypeEnum, message: any) {
-    const msgModel = new STCRequestMessageModel(type, message);
-    server.publish(topic, JSON.stringify(msgModel));
+    server.publish(topic, new STCRequestMessageModel(type, message).asJsonString());
 };
 
 console.log(`Listening on ${server.hostname}:${server.port}`);

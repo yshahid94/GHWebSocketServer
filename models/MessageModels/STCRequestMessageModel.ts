@@ -9,4 +9,8 @@ export class STCRequestMessageModel {
       this.messageType = messageType;
       this.message = message;
    }
+
+   asJsonString(){
+      return JSON.stringify(this);
+   }
 }

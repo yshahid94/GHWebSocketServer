@@ -1,6 +1,8 @@
 import { ServerWebSocket } from "bun";
 import { entityModel } from "./entityModel";
 import { entityTypeEnum } from "./entityTypeEnum";
+import { STCRequestMessageModel } from "./MessageModels/STCRequestMessageModel";
+import { STCMessageTypeEnum } from "./MessageModels/STCMessageTypeEnum";
 
 export class userModel extends entityModel {
    //Fields 
@@ -18,6 +20,7 @@ export class userModel extends entityModel {
 
    disconnectUser() {
       if (this.webSocket != null && this.webSocket.readyState == 1) {
+         this.webSocket.send(new STCRequestMessageModel(STCMessageTypeEnum.Kill_Client, null).asJsonString())
          this.webSocket.close();
       }
    }
